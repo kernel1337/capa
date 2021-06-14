@@ -29,7 +29,7 @@ if sys.version_info >= (3, 0):
     requirements.append("halo")
     requirements.append("networkx")
     requirements.append("vivisect==1.0.0")
-    requirements.append("smda==1.5.13")
+    requirements.append("smda==1.5.18")
 else:
     # py2
     requirements.append("enum34==1.1.6")  # v1.1.6 is needed by halo 0.0.30 / spinners 0.0.24
