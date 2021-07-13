@@ -52,12 +52,13 @@ See the License for the specific language governing permissions and limitations 
 import json
 import zlib
 import logging
+import os.path
 
-import capa.features
 import capa.features.file
 import capa.features.insn
+import capa.features.common
 import capa.features.basicblock
-import capa.features.extractors
+import capa.features.extractors.base_extractor
 from capa.helpers import hex
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ def serialize_feature(feature):
     return feature.freeze_serialize()
 
 
-KNOWN_FEATURES = {F.__name__: F for F in capa.features.Feature.__subclasses__()}
+KNOWN_FEATURES = {F.__name__: F for F in capa.features.common.Feature.__subclasses__()}
 
 
 def deserialize_feature(doc):
@@ -80,7 +81,7 @@ def dumps(extractor):
     serialize the given extractor to a string
 
     args:
-      extractor: capa.features.extractor.FeatureExtractor:
+      extractor: capa.features.extractors.base_extractor.FeatureExtractor:
 
     returns:
       str: the serialized features.
@@ -122,7 +123,7 @@ def dumps(extractor):
                 )
 
             for insnva, insn in sorted(
-                [(insn.__int__(), insn) for insn in extractor.get_instructions(f, bb)], key=lambda p: p[0]
+                [(int(insn), insn) for insn in extractor.get_instructions(f, bb)], key=lambda p: p[0]
             ):
                 ret["functions"][hex(f)][hex(bb)].append(hex(insnva))
 
@@ -217,7 +218,7 @@ def loads(s):
         feature = deserialize_feature(feature[:2])
         features["functions"][loc[0]]["basic blocks"][loc[1]]["instructions"][loc[2]]["features"].append((va, feature))
 
-    return capa.features.extractors.NullFeatureExtractor(features)
+    return capa.features.extractors.base_extractor.NullFeatureExtractor(features)
 
 
 MAGIC = "capa0000".encode("ascii")
@@ -228,7 +229,7 @@ def dump(extractor):
     return MAGIC + zlib.compress(dumps(extractor).encode("utf-8"))
 
 
-def is_freeze(buf):
+def is_freeze(buf: bytes) -> bool:
     return buf[: len(MAGIC)] == MAGIC
 
 
@@ -248,45 +249,16 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    formats = [
-        ("auto", "(default) detect file type automatically"),
-        ("pe", "Windows PE file"),
-        ("sc32", "32-bit shellcode"),
-        ("sc64", "64-bit shellcode"),
-    ]
-    format_help = ", ".join(["%s: %s" % (f[0], f[1]) for f in formats])
-
     parser = argparse.ArgumentParser(description="save capa features to a file")
-    parser.add_argument("sample", type=str, help="Path to sample to analyze")
+    capa.main.install_common_args(parser, {"sample", "format", "backend", "signatures"})
     parser.add_argument("output", type=str, help="Path to output file")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
-    parser.add_argument("-q", "--quiet", action="store_true", help="Disable all output but errors")
-    parser.add_argument(
-        "-f", "--format", choices=[f[0] for f in formats], default="auto", help="Select sample format, %s" % format_help
-    )
-    if sys.version_info >= (3, 0):
-        parser.add_argument(
-            "-b",
-            "--backend",
-            type=str,
-            help="select the backend to use",
-            choices=(capa.main.BACKEND_VIV, capa.main.BACKEND_SMDA),
-            default=capa.main.BACKEND_VIV,
-        )
     args = parser.parse_args(args=argv)
+    capa.main.handle_common_args(args)
 
-    if args.quiet:
-        logging.basicConfig(level=logging.ERROR)
-        logging.getLogger().setLevel(logging.ERROR)
-    elif args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.getLogger().setLevel(logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-        logging.getLogger().setLevel(logging.INFO)
+    sigpaths = capa.main.get_signatures(args.signatures)
 
-    backend = args.backend if sys.version_info > (3, 0) else capa.main.BACKEND_VIV
-    extractor = capa.main.get_extractor(args.sample, args.format, backend)
+    extractor = capa.main.get_extractor(args.sample, args.format, args.backend, sigpaths, False)
+
     with open(args.output, "wb") as f:
         f.write(dump(extractor))
 

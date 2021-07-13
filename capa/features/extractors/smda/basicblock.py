@@ -1,8 +1,7 @@
-import sys
 import string
 import struct
 
-from capa.features import Characteristic
+from capa.features.common import Characteristic
 from capa.features.basicblock import BasicBlock
 from capa.features.extractors.helpers import MIN_STACKSTRING_LEN
 
@@ -15,7 +14,7 @@ def _bb_has_tight_loop(f, bb):
 
 
 def extract_bb_tight_loop(f, bb):
-    """ check basic block for tight loop indicators """
+    """check basic block for tight loop indicators"""
     if _bb_has_tight_loop(f, bb):
         yield Characteristic("tight loop"), bb.offset
 
@@ -39,7 +38,7 @@ def get_operands(smda_ins):
 
 
 def extract_stackstring(f, bb):
-    """ check basic block for stackstring indicators """
+    """check basic block for stackstring indicators"""
     if _bb_has_stackstring(f, bb):
         yield Characteristic("stack string"), bb.offset
 
@@ -117,7 +116,7 @@ def extract_features(f, bb):
       bb (smda.common.SmdaBasicBlock): the basic block to process.
 
     yields:
-      Feature, set[VA]: the features and their location found in this basic block.
+      Tuple[Feature, int]: the features and their location found in this basic block.
     """
     yield BasicBlock(), bb.offset
     for bb_handler in BASIC_BLOCK_HANDLERS:

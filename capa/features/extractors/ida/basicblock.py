@@ -6,14 +6,13 @@
 #  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-import sys
 import string
 import struct
 
 import idaapi
 
 import capa.features.extractors.ida.helpers
-from capa.features import Characteristic
+from capa.features.common import Characteristic
 from capa.features.basicblock import BasicBlock
 from capa.features.extractors.ida import helpers
 from capa.features.extractors.helpers import MIN_STACKSTRING_LEN
@@ -39,18 +38,11 @@ def get_printable_len(op):
         raise ValueError("Unhandled operand data type 0x%x." % op.dtype)
 
     def is_printable_ascii(chars):
-        if sys.version_info[0] >= 3:
-            return all(c < 127 and chr(c) in string.printable for c in chars)
-        else:
-            return all(ord(c) < 127 and c in string.printable for c in chars)
+        return all(c < 127 and chr(c) in string.printable for c in chars)
 
     def is_printable_utf16le(chars):
-        if sys.version_info[0] >= 3:
-            if all(c == 0x00 for c in chars[1::2]):
-                return is_printable_ascii(chars[::2])
-        else:
-            if all(c == "\x00" for c in chars[1::2]):
-                return is_printable_ascii(chars[::2])
+        if all(c == 0x00 for c in chars[1::2]):
+            return is_printable_ascii(chars[::2])
 
     if is_printable_ascii(chars):
         return idaapi.get_dtype_size(op.dtype)

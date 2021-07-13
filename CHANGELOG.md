@@ -1,5 +1,256 @@
 # Change Log
 
+## master (unreleased)
+
+The first Python 3 ONLY capa version.
+It includes many new rules, including all new techniques introduced in MITRE ATT&CK v9.
+
+### New Features
+
+- rules: update ATT&CK and MBC mappings https://github.com/fireeye/capa-rules/pull/317 @williballenthin
+- main: use FLIRT signatures to identify and ignore library code #446 @williballenthin
+- tests: update test cases and caching #545 @mr-tz
+- scripts: capa2yara.py convert capa rules to YARA rules #561 @ruppde
+- rule: add file-scope feature (`function-name`) for recognized library functions #567 @williballenthin
+- main: auto detect shellcode based on file extension #516 @mr-tz
+- main: more detailed progress bar output when matching functions #562 @mr-tz
+- main: detect file limitations without doing code analysis for better performance #583 @williballenthin
+- show-features: don't show features from library functions #569 @williballenthin
+- linter: summarize results at the end #571 @williballenthin
+- linter: check for `or` with always true child statement, e.g. `optional`, colors #348 @mr-tz
+
+### Breaking Changes
+
+- py3: drop Python 2 support #480 @Ana06
+- meta: added `library_functions` field, `feature_counts.functions` does not include library functions any more #562 @mr-tz
+- json: results document now contains parsed ATT&CK and MBC fields instead of canonical representation #526 @mr-tz
+- json: record all matching strings for regex #159 @williballenthin
+- main: implement file limitations via rules not code #390 @williballenthin
+- json: correctly render negative offsets #619 @williballenthin
+- library: remove logic from `__init__.py` throughout #622 @williballenthin
+
+### New Rules (93)
+
+- anti-analysis/packer/amber/packed-with-amber @gormaniac
+- collection/file-managers/gather-3d-ftp-information @re-fox
+- collection/file-managers/gather-alftp-information @re-fox
+- collection/file-managers/gather-bitkinex-information @re-fox
+- collection/file-managers/gather-blazeftp-information @re-fox
+- collection/file-managers/gather-bulletproof-ftp-information @re-fox
+- collection/file-managers/gather-classicftp-information @re-fox
+- collection/file-managers/gather-coreftp-information @re-fox
+- collection/file-managers/gather-cuteftp-information @re-fox
+- collection/file-managers/gather-cyberduck-information @re-fox
+- collection/file-managers/gather-direct-ftp-information @re-fox
+- collection/file-managers/gather-directory-opus-information @re-fox
+- collection/file-managers/gather-expandrive-information @re-fox
+- collection/file-managers/gather-faststone-browser-information @re-fox
+- collection/file-managers/gather-fasttrack-ftp-information @re-fox
+- collection/file-managers/gather-ffftp-information @re-fox
+- collection/file-managers/gather-filezilla-information @re-fox
+- collection/file-managers/gather-flashfxp-information @re-fox
+- collection/file-managers/gather-fling-ftp-information @re-fox
+- collection/file-managers/gather-freshftp-information @re-fox
+- collection/file-managers/gather-frigate3-information @re-fox
+- collection/file-managers/gather-ftp-commander-information @re-fox
+- collection/file-managers/gather-ftp-explorer-information @re-fox
+- collection/file-managers/gather-ftp-voyager-information @re-fox
+- collection/file-managers/gather-ftpgetter-information @re-fox
+- collection/file-managers/gather-ftpinfo-information @re-fox
+- collection/file-managers/gather-ftpnow-information @re-fox
+- collection/file-managers/gather-ftprush-information @re-fox
+- collection/file-managers/gather-ftpshell-information @re-fox
+- collection/file-managers/gather-global-downloader-information @re-fox
+- collection/file-managers/gather-goftp-information @re-fox
+- collection/file-managers/gather-leapftp-information @re-fox
+- collection/file-managers/gather-netdrive-information @re-fox
+- collection/file-managers/gather-nexusfile-information @re-fox
+- collection/file-managers/gather-nova-ftp-information @re-fox
+- collection/file-managers/gather-robo-ftp-information @re-fox
+- collection/file-managers/gather-securefx-information @re-fox
+- collection/file-managers/gather-smart-ftp-information @re-fox
+- collection/file-managers/gather-softx-ftp-information @re-fox
+- collection/file-managers/gather-southriver-webdrive-information @re-fox
+- collection/file-managers/gather-staff-ftp-information @re-fox
+- collection/file-managers/gather-total-commander-information @re-fox
+- collection/file-managers/gather-turbo-ftp-information @re-fox
+- collection/file-managers/gather-ultrafxp-information @re-fox
+- collection/file-managers/gather-winscp-information @re-fox
+- collection/file-managers/gather-winzip-information @re-fox
+- collection/file-managers/gather-wise-ftp-information @re-fox
+- collection/file-managers/gather-ws-ftp-information @re-fox
+- collection/file-managers/gather-xftp-information @re-fox
+- data-manipulation/compression/decompress-data-using-aplib @r3c0nst @mr-tz
+- host-interaction/bootloader/disable-code-signing @williballenthin
+- host-interaction/bootloader/manipulate-boot-configuration @williballenthin
+- host-interaction/driver/disable-driver-code-integrity @williballenthin
+- host-interaction/file-system/bypass-mark-of-the-web @williballenthin
+- host-interaction/network/domain/get-domain-information @recvfrom
+- host-interaction/session/get-logon-sessions @recvfrom
+- linking/runtime-linking/resolve-function-by-fin8-fasthash @r3c0nst @mr-tz
+- nursery/build-docker-image @williballenthin
+- nursery/create-container @williballenthin
+- nursery/encrypt-data-using-fakem-cipher @mike-hunhoff
+- nursery/list-containers @williballenthin
+- nursery/run-in-container @williballenthin
+- persistence/registry/appinitdlls/disable-appinit_dlls-code-signature-enforcement @williballenthin
+- collection/password-manager/steal-keepass-passwords-using-keefarce @Ana06
+- host-interaction/network/connectivity/check-internet-connectivity-via-wininet matthew.williams@fireeye.com michael.hunhoff@fireeye.com
+- nursery/create-bits-job @mr-tz
+- nursery/execute-syscall-instruction @kulinacs @mr-tz
+- nursery/connect-to-wmi-namespace-via-wbemlocator michael.hunhoff@fireeye.com
+- anti-analysis/obfuscation/obfuscated-with-callobfuscator johnk3r
+- executable/installer/inno-setup/packaged-as-an-inno-setup-installer awillia2@cisco.com
+- data-manipulation/hashing/djb2/hash-data-using-djb2 awillia2@cisco.com
+- data-manipulation/encoding/base64/decode-data-using-base64-via-dword-translation-table gilbert.elliot@fireeye.com
+- nursery/list-tcp-connections-and-listeners michael.hunhoff@fireeye.com
+- nursery/list-udp-connections-and-listeners michael.hunhoff@fireeye.com
+- nursery/log-keystrokes-via-raw-input-data michael.hunhoff@fireeye.com
+- nursery/register-http-server-url michael.hunhoff@fireeye.com
+- internal/limitation/file/internal-autoit-file-limitation.yml william.ballenthin@fireeye.com
+- internal/limitation/file/internal-dotnet-file-limitation.yml william.ballenthin@fireeye.com
+- internal/limitation/file/internal-installer-file-limitation.yml william.ballenthin@fireeye.com
+- internal/limitation/file/internal-packer-file-limitation.yml william.ballenthin@fireeye.com
+- host-interaction/network/domain/enumerate-domain-computers-via-ldap awillia2@cisco.com
+- host-interaction/network/domain/get-domain-controller-name awillia2@cisco.com
+- internal/limitation/file/internal-visual-basic-file-limitation @mr-tz
+- data-manipulation/hashing/md5/hash-data-with-md5 moritz.raabe@fireeye.com
+- compiler/autohotkey/compiled-with-autohotkey awillia2@cisco.com
+- internal/limitation/file/internal-autohotkey-file-limitation @mr-tz
+- host-interaction/process/dump/create-process-memory-minidump michael.hunhoff@fireeye.com
+- nursery/get-storage-device-properties michael.hunhoff@fireeye.com
+- nursery/execute-shell-command-via-windows-remote-management michael.hunhoff@fireeye.com
+- nursery/get-token-privileges michael.hunhoff@fireeye.com
+- nursery/prompt-user-for-credentials michael.hunhoff@fireeye.com
+- nursery/spoof-parent-pid michael.hunhoff@fireeye.com
+-
+
+### Bug Fixes
+
+- build: use Python 3.8 for PyInstaller to support consistently running across multiple operating systems including Windows 7 #505 @mr-tz
+- main: correctly match BB-scope matches at file scope #605 @williballenthin
+- main: do not process non-PE files even when --format explicitly provided #664 @mr-tz
+
+### capa explorer IDA Pro plugin
+- explorer: IDA 7.6 support #497 @williballenthin
+- explorer: explain how to install IDA 7.6 patch to enable the plugin #528 @williballenthin
+- explorer: document IDA 7.6sp1 as alternative to the patch #536 @Ana06
+- explorer: add support for function-name feature #618 @mike-hunhoff
+- explorer: circular import workaround #654 @mike-hunhoff
+- explorer: add argument to control whether to automatically analyze when running capa explorer #548 @Ana06
+- explorer: extract API features via function names recognized by IDA/FLIRT #661 @mr-tz
+
+### Development
+
+- ci: add capa release link to capa-rules tag #517 @Ana06
+- ci, changelog: update `New Rules` section in CHANGELOG automatically https://github.com/fireeye/capa-rules/pull/374 #549 #604 @Ana06
+- ci, changelog: support multiple author in sync GH https://github.com/fireeye/capa-rules/pull/378 @Ana06
+- ci, lint: check statements for single child statements #563 @mr-tz
+- ci: reject PRs without CHANGELOG update to ensure CHANGELOG is kept up-to-date #584 @Ana06
+- ci: test that scripts run #660 @mr-tz
+
+### Raw diffs
+
+<!-- The diff uses v1.6.1 because master doesn't include v1.6.2 -->
+- [capa v1.6.1...master](https://github.com/fireeye/capa/compare/v1.6.1...master)
+- [capa-rules v1.6.1...master](https://github.com/fireeye/capa-rules/compare/v1.6.1...master)
+
+
+## v1.6.3 (2021-04-29)
+
+This release adds IDA 7.6 support to capa.
+
+### Changes
+
+- IDA 7.6 support @williballenthin @Ana06
+
+### Raw diffs
+
+  - [capa v1.6.2...v1.6.3](https://github.com/fireeye/capa/compare/v1.6.2...v1.6.3)
+
+
+## v1.6.2 (2021-04-13)
+
+This release backports a fix to capa 1.6: The Windows binary was built with Python 3.9 which doesn't support Windows 7.
+
+### Bug Fixes
+
+- build: use Python 3.8 for PyInstaller to support consistently running across multiple operating systems including Windows 7 @mr-tz @Ana06
+
+### Raw diffs
+
+  - [capa v1.6.1...v1.6.2](https://github.com/fireeye/capa/compare/v1.6.1...v1.6.2)
+
+
+## v1.6.1 (2021-04-07)
+
+This release includes several bug fixes, such as a vivisect issue that prevented capa from working on Windows with Python 3. It also adds 17 new rules and a bunch of improvements in the rules and IDA rule generator. We appreciate everyone who opened issues, provided feedback, and contributed code and rules.
+
+### Upcoming changes
+
+**This is the very last capa release that supports Python 2.** The next release will be v2.0 and will have breaking changes, including the removal of Python 2 support.
+
+### New features
+
+- explorer: add support for multi-line tab and SHIFT + Tab #474 @mike-hunhoff
+
+![multi-line tab in rule generator](doc/img/changelog/tab.gif)
+
+### New Rules (17)
+
+- encrypt data using RC4 with custom key via WinAPI @MalwareMechanic
+- encrypt data using Curve25519 @dandonov
+- packaged as an IExpress self-extracting archive @recvfrom
+- create registry key via offline registry library @johnk3r
+- open registry key via offline registry library @johnk3r
+- query registry key via offline registry library @johnk3r
+- set registry key via offline registry library @johnk3r
+- delete registry key via offline registry library @johnk3r
+- enumerate PE sections @Ana06
+- inject DLL reflectively @Ana06
+- inspect section memory permissions @Ana06
+- parse PE exports @Ana06
+- rebuild import table @Ana06
+- compare security identifiers @mike-hunhoff
+- get user security identifier @mike-hunhoff
+- listen for remote procedure calls @mike-hunhoff
+- query remote server for available data @mike-hunhoff
+
+### Bug Fixes
+
+- vivisect: update to v1.0.1 which includes bug fix for #459 (capa failed in Windows with Python 3 and vivisect) #512 @williballenthin
+- explorer: fix initialize rules directory #464 @mike-hunhoff
+- explorer: support subscope rules #493 @mike-hunhoff
+- explorer: add checks to validate matched data when searching #500 @mike-hunhoff
+- features, explorer: add support for string features with special characters e.g. '\n' #468 @mike-hunhoff
+
+### Changes
+
+- vivisect: raises `IncompatibleVivVersion` instead of `UnicodeDecodeError` when using incompatible Python 2 `.viv` files with Python3 #479 @Ana06
+- explorer: improve settings modification #465 @mike-hunhoff
+- rules: improvements @mr-tz, @re-fox, @mike-hunhoff
+- rules, lint: enforce string with double quotes formatting in rules #468 @mike-hunhoff
+- lint: ensure LF end of line #485 #486 @mr-tz
+- setup: pin dependencies #513 #504 @Ana06 @mr-tz
+
+### Development
+
+- ci: test on Windows, Ubuntu, macOS across Python versions #470 @mr-tz @Ana06
+- ci: pin OS versions #491 @williballenthin
+- ci: tag capa-rules on release #476 @Ana06
+- doc: document release process #476 @Ana06
+- doc: Improve README badges #477 #478 @ana06 @mr-tz
+- doc: update capa explorer documentation #503 @mike-hunhoff
+- doc: add PR template #495 @mr-tz
+- changelog: document incompatibility of viv files #475 @Ana06
+- rule loading: ignore files starting with .git #492 @mr-tz
+
+### Raw diffs
+
+  - [capa v1.6.0...v1.6.1](https://github.com/fireeye/capa/compare/v1.6.0...v1.6.1)
+  - [capa-rules v1.6.0...v1.6.1](https://github.com/fireeye/capa-rules/compare/v1.6.0...v1.6.1)
+
+
 ## v1.6.0 (2021-03-09)
 
 This release adds the capa explorer rule generator plugin for IDA Pro, vivisect support for Python 3 and 12 new rules. We appreciate everyone who opened issues, provided feedback, and contributed code and rules. Thank you also to the vivisect development team (@rakuy0, @atlas0fd00m) for the Python 3 support (`vivisect==1.0.0`) and the fixes for Python 2 (`vivisect==0.2.1`).

@@ -6,7 +6,6 @@
 #  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-import sys
 import codecs
 
 import idc
@@ -32,7 +31,7 @@ def location_to_hex(location):
     return "%08X" % location
 
 
-class CapaExplorerDataItem(object):
+class CapaExplorerDataItem:
     """store data for CapaExplorerDataModel"""
 
     def __init__(self, parent, data, can_check=True):
@@ -202,7 +201,7 @@ class CapaExplorerRuleMatchItem(CapaExplorerDataItem):
 
     @property
     def source(self):
-        """ return rule contents for display """
+        """return rule contents for display"""
         return self._source
 
 
@@ -328,14 +327,10 @@ class CapaExplorerByteViewItem(CapaExplorerFeatureItem):
         """
         byte_snap = idaapi.get_bytes(location, 32)
 
+        details = ""
         if byte_snap:
             byte_snap = codecs.encode(byte_snap, "hex").upper()
-            if sys.version_info >= (3, 0):
-                details = " ".join([byte_snap[i : i + 2].decode() for i in range(0, len(byte_snap), 2)])
-            else:
-                details = " ".join([byte_snap[i : i + 2] for i in range(0, len(byte_snap), 2)])
-        else:
-            details = ""
+            details = " ".join([byte_snap[i : i + 2].decode() for i in range(0, len(byte_snap), 2)])
 
         super(CapaExplorerByteViewItem, self).__init__(parent, display, location=location, details=details)
         self.ida_highlight = idc.get_color(location, idc.CIC_ITEM)

@@ -6,11 +6,10 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License
 #  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-import sys
 import json
 import textwrap
 
-import pytest
+import fixtures
 from fixtures import *
 
 import capa.main
@@ -26,6 +25,7 @@ def test_main(z9324d_extractor):
     assert capa.main.main([path, "-vv"]) == 0
     assert capa.main.main([path, "-v"]) == 0
     assert capa.main.main([path, "-j"]) == 0
+    assert capa.main.main([path, "-q"]) == 0
     assert capa.main.main([path]) == 0
 
 
@@ -58,10 +58,6 @@ def test_main_single_rule(z9324d_extractor, tmpdir):
 
 
 def test_main_non_ascii_filename(pingtaest_extractor, tmpdir, capsys):
-    # on py2.7, need to be careful about str (which can hold bytes)
-    #  vs unicode (which is only unicode characters).
-    # on py3, this should not be needed.
-    #
     # here we print a string with unicode characters in it
     # (specifically, a byte string with utf-8 bytes in it, see file encoding)
     assert capa.main.main(["-q", pingtaest_extractor.path]) == 0
@@ -69,20 +65,14 @@ def test_main_non_ascii_filename(pingtaest_extractor, tmpdir, capsys):
     std = capsys.readouterr()
     # but here, we have to use a unicode instance,
     # because capsys has decoded the output for us.
-    if sys.version_info >= (3, 0):
-        assert pingtaest_extractor.path in std.out
-    else:
-        assert pingtaest_extractor.path.decode("utf-8") in std.out
+    assert pingtaest_extractor.path in std.out
 
 
 def test_main_non_ascii_filename_nonexistent(tmpdir, caplog):
     NON_ASCII_FILENAME = "täst_not_there.exe"
     assert capa.main.main(["-q", NON_ASCII_FILENAME]) == -1
 
-    if sys.version_info >= (3, 0):
-        assert NON_ASCII_FILENAME in caplog.text
-    else:
-        assert NON_ASCII_FILENAME.decode("utf-8") in caplog.text
+    assert NON_ASCII_FILENAME in caplog.text
 
 
 def test_main_shellcode(z499c2_extractor):
@@ -90,7 +80,10 @@ def test_main_shellcode(z499c2_extractor):
     assert capa.main.main([path, "-vv", "-f", "sc32"]) == 0
     assert capa.main.main([path, "-v", "-f", "sc32"]) == 0
     assert capa.main.main([path, "-j", "-f", "sc32"]) == 0
+    assert capa.main.main([path, "-q", "-f", "sc32"]) == 0
     assert capa.main.main([path, "-f", "sc32"]) == 0
+    # auto detect shellcode based on file extension
+    assert capa.main.main([path]) == 0
 
 
 def test_ruleset():
@@ -368,18 +361,17 @@ def test_not_render_rules_also_matched(z9324d_extractor, capsys):
     assert "create TCP socket" in std.out
 
 
-# It tests main works with different backends
 def test_backend_option(capsys):
-    if sys.version_info > (3, 0):
-        path = get_data_path_by_name("pma16-01")
-        assert capa.main.main([path, "-j", "-b", capa.main.BACKEND_VIV]) == 0
-        std = capsys.readouterr()
-        std_json = json.loads(std.out)
-        assert std_json["meta"]["analysis"]["extractor"] == "VivisectFeatureExtractor"
-        assert len(std_json["rules"]) > 0
+    # tests that main works with different backends
+    path = fixtures.get_data_path_by_name("pma16-01")
+    assert capa.main.main([path, "-j", "-b", capa.main.BACKEND_VIV]) == 0
+    std = capsys.readouterr()
+    std_json = json.loads(std.out)
+    assert std_json["meta"]["analysis"]["extractor"] == "VivisectFeatureExtractor"
+    assert len(std_json["rules"]) > 0
 
-        assert capa.main.main([path, "-j", "-b", capa.main.BACKEND_SMDA]) == 0
-        std = capsys.readouterr()
-        std_json = json.loads(std.out)
-        assert std_json["meta"]["analysis"]["extractor"] == "SmdaFeatureExtractor"
-        assert len(std_json["rules"]) > 0
+    assert capa.main.main([path, "-j", "-b", capa.main.BACKEND_SMDA]) == 0
+    std = capsys.readouterr()
+    std_json = json.loads(std.out)
+    assert std_json["meta"]["analysis"]["extractor"] == "SmdaFeatureExtractor"
+    assert len(std_json["rules"]) > 0

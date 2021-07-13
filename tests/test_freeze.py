@@ -5,40 +5,41 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License
 #  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-import sys
 import textwrap
 
-import pytest
 from fixtures import *
 
 import capa.main
+import capa.rules
 import capa.helpers
-import capa.features
+import capa.features.file
 import capa.features.insn
+import capa.features.common
 import capa.features.freeze
-import capa.features.extractors
+import capa.features.basicblock
+import capa.features.extractors.base_extractor
 
-EXTRACTOR = capa.features.extractors.NullFeatureExtractor(
+EXTRACTOR = capa.features.extractors.base_extractor.NullFeatureExtractor(
     {
         "base address": 0x401000,
         "file features": [
-            (0x402345, capa.features.Characteristic("embedded pe")),
+            (0x402345, capa.features.common.Characteristic("embedded pe")),
         ],
         "functions": {
             0x401000: {
                 "features": [
-                    (0x401000, capa.features.Characteristic("indirect call")),
+                    (0x401000, capa.features.common.Characteristic("indirect call")),
                 ],
                 "basic blocks": {
                     0x401000: {
                         "features": [
-                            (0x401000, capa.features.Characteristic("tight loop")),
+                            (0x401000, capa.features.common.Characteristic("tight loop")),
                         ],
                         "instructions": {
                             0x401000: {
                                 "features": [
                                     (0x401000, capa.features.insn.Mnemonic("xor")),
-                                    (0x401000, capa.features.Characteristic("nzxor")),
+                                    (0x401000, capa.features.common.Characteristic("nzxor")),
                                 ],
                             },
                             0x401002: {
@@ -112,32 +113,25 @@ def compare_extractors_viv_null(viv_ext, null_ext):
     and NullFeatureExtractor returns ints
 
     args:
-      viv_ext (capa.features.extractors.viv.VivisectFeatureExtractor)
+      viv_ext (capa.features.extractors.viv.extractor.VivisectFeatureExtractor)
       null_ext (capa.features.extractors.NullFeatureExtractor)
     """
     assert list(viv_ext.extract_file_features()) == list(null_ext.extract_file_features())
-    assert list(map(to_int, viv_ext.get_functions())) == list(null_ext.get_functions())
+    assert list(map(int, viv_ext.get_functions())) == list(null_ext.get_functions())
     for f in viv_ext.get_functions():
-        assert list(map(to_int, viv_ext.get_basic_blocks(f))) == list(null_ext.get_basic_blocks(to_int(f)))
-        assert list(viv_ext.extract_function_features(f)) == list(null_ext.extract_function_features(to_int(f)))
+        assert list(map(int, viv_ext.get_basic_blocks(f))) == list(null_ext.get_basic_blocks(int(f)))
+        assert list(viv_ext.extract_function_features(f)) == list(null_ext.extract_function_features(int(f)))
 
         for bb in viv_ext.get_basic_blocks(f):
-            assert list(map(to_int, viv_ext.get_instructions(f, bb))) == list(
-                null_ext.get_instructions(to_int(f), to_int(bb))
-            )
+            assert list(map(int, viv_ext.get_instructions(f, bb))) == list(null_ext.get_instructions(int(f), int(bb)))
             assert list(viv_ext.extract_basic_block_features(f, bb)) == list(
-                null_ext.extract_basic_block_features(to_int(f), to_int(bb))
+                null_ext.extract_basic_block_features(int(f), int(bb))
             )
 
             for insn in viv_ext.get_instructions(f, bb):
                 assert list(viv_ext.extract_insn_features(f, bb, insn)) == list(
-                    null_ext.extract_insn_features(to_int(f), to_int(bb), to_int(insn))
+                    null_ext.extract_insn_features(int(f), int(bb), int(insn))
                 )
-
-
-def to_int(o):
-    """helper to get int value of extractor items"""
-    return capa.helpers.oint(o)
 
 
 def test_freeze_s_roundtrip():
@@ -162,19 +156,18 @@ def roundtrip_feature(feature):
 
 def test_serialize_features():
     roundtrip_feature(capa.features.insn.API("advapi32.CryptAcquireContextW"))
-    roundtrip_feature(capa.features.String("SCardControl"))
+    roundtrip_feature(capa.features.common.String("SCardControl"))
     roundtrip_feature(capa.features.insn.Number(0xFF))
     roundtrip_feature(capa.features.insn.Offset(0x0))
     roundtrip_feature(capa.features.insn.Mnemonic("push"))
     roundtrip_feature(capa.features.file.Section(".rsrc"))
-    roundtrip_feature(capa.features.Characteristic("tight loop"))
+    roundtrip_feature(capa.features.common.Characteristic("tight loop"))
     roundtrip_feature(capa.features.basicblock.BasicBlock())
     roundtrip_feature(capa.features.file.Export("BaseThreadInitThunk"))
     roundtrip_feature(capa.features.file.Import("kernel32.IsWow64Process"))
     roundtrip_feature(capa.features.file.Import("#11"))
 
 
-@pytest.mark.xfail(sys.version_info >= (3, 0), reason="vivsect only works on py2")
 def test_freeze_sample(tmpdir, z9324d_extractor):
     # tmpdir fixture handles cleanup
     o = tmpdir.mkdir("capa").join("test.frz").strpath
@@ -182,7 +175,6 @@ def test_freeze_sample(tmpdir, z9324d_extractor):
     assert capa.features.freeze.main([path, o, "-v"]) == 0
 
 
-@pytest.mark.xfail(sys.version_info >= (3, 0), reason="vivsect only works on py2")
 def test_freeze_load_sample(tmpdir, z9324d_extractor):
     o = tmpdir.mkdir("capa").join("test.frz")
 
